@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Virtual City Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i></div>
+
+<header class="nav">
+  <a class="logo" href="#" data-view="home">VIRTUAL CITY EXPLORER</a>
+  <nav>
+    <button data-view="home">Explore</button>
+    <button data-view="discover">Discover</button>
+    <button data-view="favorites">Favorites <span id="favCount">0</span></button>
+    <button data-view="about">About</button>
+  </nav>
+</header>
+
+<main>
+<!-- HOME -->
+<section id="home" class="view">
+  <div class="hero">
+    <h1>Discover every city differently.</h1>
+    <p>Explore places, weather, food and experiences from one intelligent city dashboard.</p>
+    <form id="searchForm" class="search" role="search">
+      <input id="searchInput" type="text" placeholder="Search a city…" aria-label="Search a city" autocomplete="off">
+      <button class="btn" type="submit">Explore City</button>
+    </form>
+    <p id="searchMsg" class="msg" role="alert"></p>
+    <div class="chips" id="chips"></div>
+    <button class="ghost" id="surprise">Surprise Me ✨</button>
+  </div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="view">
+  <div class="dash-head">
+    <button class="ghost" id="back">← Back</button>
+    <div><h2 id="cName"></h2><span id="cCountry"></span></div>
+    <div class="clock" id="cTime"></div>
+  </div>
+  <p class="demo" id="demoNote" hidden>Showing demo data.</p>
+  <div id="dashBody"></div>
+</section>
+
+<!-- FAVORITES -->
+<section id="favorites" class="view">
+  <h2 class="title">Your saved places</h2>
+  <div class="grid" id="favGrid"></div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="view">
+  <div class="card about">
+    <h2>What is Virtual City Explorer?</h2>
+    <p>Virtual City Explorer is an interactive web application designed to bring essential city information together in one place. It combines weather, places, maps and local discovery features through APIs and JavaScript.</p>
+    <h3>Technology Used</h3>
+    <div class="chips"><span class="chip">HTML5</span><span class="chip">CSS3</span><span class="chip">JavaScript</span><span class="chip">REST APIs</span><span class="chip">LocalStorage</span></div>
+    <p class="small">Data: Open-Meteo (weather, geocoding), Wikipedia (summaries, images), OpenStreetMap (places, map). No API keys needed.</p>
+  </div>
+</section>
+</main>
+<script src="script.js"></script>
+</body>
+</html>
