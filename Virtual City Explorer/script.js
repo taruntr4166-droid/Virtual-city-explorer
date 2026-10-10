@@ -98,6 +98,33 @@ function planDay(places, kind) {
   return [['Morning', am], ['Afternoon', pm], ['Evening', pmEve]];
 }
 
+/* Smart Packing List: built from the city's live weather */
+function packList(w, kind) {
+  const l = ['🪪 ID & charger'];
+  if (w.t >= 30) l.push('🧴 Sunscreen', '🕶 Sunglasses', '💧 Water bottle');
+  else if (w.t >= 20) l.push('👕 Light cottons', '🕶 Sunglasses');
+  else if (w.t >= 10) l.push('🧥 Jacket', '👖 Full pants');
+  else l.push('🧣 Heavy coat', '🧤 Gloves');
+  if (kind === 'rainy' || w.r >= 50) l.push('☂️ Umbrella', '🥾 Water-resistant shoes');
+  if (w.h >= 75) l.push('👚 Quick-dry clothes');
+  if (w.w >= 25) l.push('🌬 Windcheater');
+  return l;
+}
+/* City Compare: loads a second city and shows a side-by-side table */
+async function compareCity(raw) {
+  const out = $('#cmpOut'), q = raw.trim();
+  if (!q) { out.innerHTML = '<p class="empty">Type a city to compare.</p>'; return; }
+  out.innerHTML = '<p class="empty">Comparing…</p>';
+  try {
+    const b = DEMO[key(q)] || await geocode(q); if (!b) throw 0;
+    const bw = await fetchWeather(b).catch(() => (DEMO[key(b.name)] || {}).w); if (!bw) throw 0;
+    const a = state.w, d = a.t - bw.t, A = state.city.name;
+    const rows = [['🌡 Temp', 't', '°C'], ['🤒 Feels like', 'f', '°C'], ['💧 Humidity', 'h', '%'], ['💨 Wind', 'w', ' km/h'], ['🌧 Rain chance', 'r', '%']];
+    out.innerHTML = `<table class="cmp"><tr><th></th><th>${esc(A)}</th><th>${esc(b.name)}</th></tr>${rows.map(([l, k, u]) => `<tr><th>${l}</th><td>${a[k]}${u}</td><td>${bw[k]}${u}</td></tr>`).join('')}</table>
+      <p class="mood">${d === 0 ? 'Both cities feel the same right now.' : esc(d > 0 ? A : b.name) + ' is warmer by ' + Math.abs(d) + '°C.'}</p>`;
+  } catch { out.innerHTML = '<p class="empty">Couldn’t compare. Check the city name or your connection.</p>'; }
+}
+
 /* ========== 5. FAVORITES (localStorage) ========== */
 const FAV_KEY = 'vce_favorites';
 const favs = {
@@ -144,7 +171,7 @@ function animateNumbers() {
 }
 function renderDashboard(c, w, desc, img, places, demo) {
   const wx = describeWeather(w.code), kind = wx.kind;
-  state.city = c; state.places = places; state.cat = 'All';
+  state.city = c; state.places = places; state.cat = 'All'; state.w = w;
   $('#cName').textContent = c.name; $('#cCountry').textContent = c.country; $('#demoNote').hidden = !demo;
   const bg = img ? `background-image:url('${esc(img)}')` : 'background:linear-gradient(135deg,#243b8f,#8a5a2e)';
   const stat = (ic, l, n, u) => `<div class="stat"><span>${ic} ${l}</span><b data-n="${n}" data-u="${u}">0${u}</b></div>`;
@@ -156,6 +183,8 @@ function renderDashboard(c, w, desc, img, places, demo) {
     <div class="card c12"><div class="stats">${stat('🌡', 'Temperature', w.t, '°')}${stat('🌧', 'Rain chance', w.r, '%')}${stat('💧', 'Humidity', w.h, '%')}${stat('💨', 'Wind km/h', w.w, '')}<div class="stat"><span>🌅 Sunrise</span><b>${w.sr}</b></div><div class="stat"><span>🌇 Sunset</span><b>${w.ss}</b></div></div></div>
     <div class="card c6"><h3>What should I do today?</h3><div class="todo">${TODO[kind].map(t => `<div>${t}</div>`).join('')}</div>
       <button class="btn" id="planBtn" style="margin-top:16px">Plan My Day</button><div class="plan" id="plan"></div></div>
+    <div class="card c6"><h3>🎒 Smart Packing List</h3><div class="tags">${packList(w, kind).map(i => `<span class="chip">${i}</span>`).join('')}</div></div>
+    <div class="card c6"><h3>⚖️ Compare with another city</h3><div class="cmpbar"><input id="cmpInput" placeholder="e.g. Paris" aria-label="City to compare"><button class="btn" id="cmpBtn">Compare</button></div><div id="cmpOut"></div></div>
     <div class="card c6"><h3>City Vibe</h3><div class="tags">${(c.vibes || ['🌍 Explorable']).map(v => `<span class="chip">${v}</span>`).join('')}</div></div>
   </div>
   <h3 class="title">Explore the City</h3>
@@ -212,6 +241,17 @@ function init() {
   $('#favCount').textContent = favs.all().length;
   $('#searchForm').addEventListener('submit', e => { e.preventDefault(); loadCity($('#searchInput').value); });
   $('#surprise').addEventListener('click', () => { const n = Object.values(DEMO).map(d => d.name); loadCity(n[Math.floor(Math.random() * n.length)]); });
+  /* Voice search (Web Speech API; hidden if the browser lacks it) */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition, mic = $('#mic');
+  if (!SR) mic.hidden = true;
+  else mic.addEventListener('click', () => {
+    const r = new SR(); r.lang = 'en-IN'; mic.classList.add('on');
+    r.onresult = e => { const v = e.results[0][0].transcript.replace(/[.,!?]$/, ''); $('#searchInput').value = v; loadCity(v); };
+    r.onerror = () => { $('#searchMsg').textContent = 'Couldn’t hear that. Please try again.'; };
+    r.onend = () => mic.classList.remove('on');
+    r.start();
+  });
+  document.body.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'cmpInput') compareCity(e.target.value); });
   $('#back').addEventListener('click', () => showView('home'));
   document.body.addEventListener('click', e => {
     const t = e.target.closest('button,a'); if (!t) return;
@@ -223,6 +263,7 @@ function init() {
     if (t.dataset.fav) { favs.toggle(state.places[+t.dataset.fav]); renderPlaces(); }
     if (t.dataset.map) { const p = state.places[+t.dataset.map]; renderMap(p.lat, p.lon, p.name); $('#mapBox').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     if (t.dataset.unfav !== undefined || t.dataset.rm !== undefined) { const i = +(t.dataset.unfav ?? t.dataset.rm); const a = favs.all(); favs.toggle(a[i]); renderFavorites(); }
+    if (t.id === 'cmpBtn') compareCity($('#cmpInput').value);
     if (t.id === 'planBtn') $('#plan').innerHTML = planDay(state.places, describeWeather(0).kind && state.city ? currentKind() : 'sunny').map(([k, v]) => `<div><span>${k}</span>${esc(v)}</div>`).join('');
   });
   showView('home');

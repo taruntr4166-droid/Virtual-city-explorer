@@ -92,3 +92,13 @@ button.chip:hover,.chip.on{background:var(--acc);color:#1a1200;border-color:var(
 @media(max-width:900px){.c8,.c4,.c6{grid-column:span 12}}
 @media(max-width:560px){.search{flex-direction:column;border-radius:26px}.nav{justify-content:center}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== 11. New features: voice, compare ===== */
+.mic{font-size:1.2rem;padding:0 12px;border-radius:99px}
+.mic.on{background:var(--acc);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.5}}
+.cmpbar{display:flex;gap:8px}
+.cmpbar input{flex:1;min-width:0;padding:10px 16px;border-radius:99px;border:1px solid var(--line);background:var(--glass);color:var(--txt);font:inherit}
+.cmp{width:100%;border-collapse:collapse;margin-top:14px}
+.cmp th,.cmp td{padding:9px 6px;text-align:left;border-bottom:1px solid var(--line)}
+.cmp th{color:var(--mute);font-weight:600}
